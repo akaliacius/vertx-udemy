@@ -36,7 +36,9 @@ dependencyManagement {
 }
 
 dependencies {
-  implementation("io.vertx:vertx-core:$vertxVersion")
+  implementation(platform("io.vertx:vertx-stack-depchain:$vertxVersion"))
+  implementation("io.vertx:vertx-core")
+  implementation("io.vertx:vertx-rx-java3")
   implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
   implementation("org.apache.logging.log4j:log4j-api")
   implementation("org.apache.logging.log4j:log4j-core")
