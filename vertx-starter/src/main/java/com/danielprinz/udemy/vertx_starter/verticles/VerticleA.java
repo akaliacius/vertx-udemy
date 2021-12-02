@@ -1,26 +1,24 @@
 package com.danielprinz.udemy.vertx_starter.verticles;
 
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Single;
+import io.vertx.rxjava3.core.AbstractVerticle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Promise;
 
 public class VerticleA extends AbstractVerticle {
 
   private static final Logger LOG = LoggerFactory.getLogger(VerticleA.class);
 
   @Override
-  public void start(final Promise<Void> startPromise) throws Exception {
+  public Completable rxStart() {
     LOG.debug("Start {}", getClass().getName());
-    vertx.deployVerticle(new VerticleAA(), whenDeployed -> {
-      LOG.debug("Deployed {}", VerticleAA.class.getName());
-      vertx.undeploy(whenDeployed.result());
-    });
-    vertx.deployVerticle(new VerticleAB(), whenDeployed -> {
-      LOG.debug("Deployed {}", VerticleAB.class.getName());
-      // Do not undeploy
-    });
-    startPromise.complete();
+    var v1 = vertx.rxDeployVerticle(new VerticleAA())
+      .doOnSuccess(id -> LOG.debug("Deployed {}", VerticleAA.class.getName()))
+      .doOnSuccess(id -> vertx.rxUndeploy(id).subscribe());
+
+    var v2 = vertx.rxDeployVerticle(new VerticleAB())
+      .doOnSuccess(id -> LOG.debug("Deployed {}", VerticleAB.class.getName()));
+    return Single.merge(v1, v2).ignoreElements();
   }
 }

@@ -1,15 +1,15 @@
 package com.danielprinz.udemy.vertx_starter.verticles;
 
-import java.util.UUID;
-
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Single;
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.json.JsonObject;
+import io.vertx.rxjava3.core.AbstractVerticle;
+import io.vertx.rxjava3.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
+import java.util.UUID;
 
 public class MainVerticle extends AbstractVerticle {
 
@@ -17,15 +17,16 @@ public class MainVerticle extends AbstractVerticle {
 
   public static void main(String[] args) {
     final Vertx vertx = Vertx.vertx();
-    vertx.deployVerticle(new MainVerticle());
+    vertx.rxDeployVerticle(new MainVerticle())
+      .subscribe();
   }
 
   @Override
-  public void start(final Promise<Void> startPromise) throws Exception {
+  public Completable rxStart() {
     LOG.debug("Start {}", getClass().getName());
-    vertx.deployVerticle(new VerticleA());
-    vertx.deployVerticle(new VerticleB());
-    vertx.deployVerticle(VerticleN.class.getName(),
+    var v1 = vertx.rxDeployVerticle(new VerticleA());
+    var v2 = vertx.rxDeployVerticle(new VerticleB());
+    var v3 = vertx.rxDeployVerticle(VerticleN.class.getName(),
       new DeploymentOptions()
         .setInstances(4)
         .setConfig(new JsonObject()
@@ -33,6 +34,7 @@ public class MainVerticle extends AbstractVerticle {
           .put("name", VerticleN.class.getSimpleName())
         )
     );
-    startPromise.complete();
+    return Single.merge(v1, v2, v3)
+      .ignoreElements();
   }
 }
